@@ -49,13 +49,21 @@ def health():
     return jsonify({"status": "Kerala Tourism Chatbot API is running 🌴"})
 
 
-@app.route("/chat", methods=["POST"])
+@app.route("/chat", methods=["POST", "OPTIONS"])
 def chat():
     """
     POST /chat
     Body: { "message": "...", "history": [{role, content}, ...] }
     Returns: { "reply": "..." }
     """
+    if request.method == "OPTIONS":
+        # Handle explicitly for Serverless environments that strip headers
+        response = jsonify()
+        response.headers.add("Access-Control-Allow-Origin", "*")
+        response.headers.add("Access-Control-Allow-Headers", "Content-Type,Authorization")
+        response.headers.add("Access-Control-Allow-Methods", "POST,OPTIONS")
+        return response
+
     if not client:
         return jsonify({
             "error": "OPENROUTER_API_KEY not configured",
