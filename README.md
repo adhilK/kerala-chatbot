@@ -30,11 +30,11 @@ Get a free OpenRouter API key at: https://openrouter.ai/
 
 ### 3. Run the Frontend
 ```bash
-cd frontend
+cd docs
 # Open index.html directly in your browser, OR use VS Code Live Server
 ```
 
-> ⚠️ Make sure `API_URL` in `frontend/script.js` is set to `http://localhost:5000/chat` for local development.
+> ⚠️ Make sure `API_URL` in `docs/script.js` is set to `http://localhost:5000/chat` for local development.
 
 ---
 
@@ -42,8 +42,8 @@ cd frontend
 
 ```
 kerala-chatbot/
-├── frontend/
-│   ├── index.html          # Chat UI
+├── docs/                   # Chat UI (formerly frontend folder)
+│   ├── index.html          
 │   ├── style.css           # Kerala green theme + responsive
 │   └── script.js           # Chat logic, API calls, typing animation
 ├── backend/
@@ -68,7 +68,7 @@ kerala-chatbot/
 
 ### Frontend → GitHub Pages
 1. Go to repo **Settings → Pages**
-2. Set source to `main` branch, `/frontend` folder
+2. Set source to `main` branch, `/docs` folder
 3. Update `API_URL` in `script.js` to your Vercel backend URL
 
 ---
