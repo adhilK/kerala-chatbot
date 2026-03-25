@@ -110,4 +110,4 @@ OPENROUTER_API_KEY=your_openrouter_api_key_here
 
 ## 📋 License
 
-MIT — IBM Internship Project
+IBM Internship Project
