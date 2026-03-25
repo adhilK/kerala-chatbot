@@ -7,7 +7,7 @@
 
 // Change to your Vercel backend URL when deployed, e.g.:
 // const API_URL = "https://kerala-chatbot-backend.vercel.app/chat";
-const API_URL = "http://localhost:5000/chat";
+const API_URL = "kerala-chatbot.vercel.app/chat";
 
 const GREETING = "Namaskaram! 🙏 I am KT, your Kerala Tourism Guide.\n\nAsk me about Kerala's stunning places, delicious food, vibrant festivals, or travel tips. I'm here to help you plan the perfect Kerala trip!";
 
@@ -21,11 +21,11 @@ let isLoading = false;
 
 // ── DOM References ────────────────────────────────────────────────────────────
 
-const messagesArea  = document.getElementById("messagesArea");
-const userInput     = document.getElementById("userInput");
-const sendBtn       = document.getElementById("sendBtn");
-const charCount     = document.getElementById("charCount");
-const chipsContainer= document.getElementById("chipsContainer");
+const messagesArea = document.getElementById("messagesArea");
+const userInput = document.getElementById("userInput");
+const sendBtn = document.getElementById("sendBtn");
+const charCount = document.getElementById("charCount");
+const chipsContainer = document.getElementById("chipsContainer");
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 
@@ -227,7 +227,7 @@ function autoResize(el) {
 function updateCharCount() {
   const len = userInput.value.length;
   charCount.textContent = `${len} / 500`;
-  charCount.classList.toggle("warn",  len >= 400 && len < 480);
+  charCount.classList.toggle("warn", len >= 400 && len < 480);
   charCount.classList.toggle("limit", len >= 480);
 }
 
