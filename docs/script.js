@@ -7,7 +7,7 @@
 
 // Change to your Vercel backend URL when deployed, e.g.:
 // const API_URL = "https://kerala-chatbot-backend.vercel.app/chat";
-const API_URL = "https://kerala-chatbot-git-main-adhils-projects-e3c95620.vercel.app/chat";
+const API_URL = "https://kerala-chatbot-9kj25hs5j-adhils-projects-e3c95620.vercel.app/chat";
 
 const GREETING = "Namaskaram! 🙏 I am KT, your Kerala Tourism Guide.\n\nAsk me about Kerala's stunning places, delicious food, vibrant festivals, or travel tips. I'm here to help you plan the perfect Kerala trip!";
 
