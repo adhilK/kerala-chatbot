@@ -117,7 +117,7 @@ def chat():
         messages.append({"role": "user", "content": user_message})
 
         response = client.chat.completions.create(
-            model="arcee-ai/trinity-large-preview:free",
+            model="meta-llama/llama-3.1-8b-instruct:free",
             messages=messages,
             temperature=0.7,
             max_tokens=500
