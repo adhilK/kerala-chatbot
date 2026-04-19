@@ -5,8 +5,8 @@
 
 // ── Config ──────────────────────────────────────────────────────────────────
 
-// Production backend (stable Vercel alias — does not change between deployments)
-const API_URL = "https://kerala-chatbot-adhils-projects-e3c95620.vercel.app/chat";
+// Production backend (Vercel — update after each new deployment)
+const API_URL = "https://kerala-chatbot-j8yd0zbfz-adhils-projects-e3c95620.vercel.app/chat";
 
 // Itinerary endpoint — same host, different path
 const ITINERARY_URL = API_URL.replace(/\/chat$/, "/itinerary");
