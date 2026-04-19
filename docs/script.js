@@ -15,11 +15,23 @@ const GREETING = "Namaskaram! 🙏 I am KT, your Kerala Tourism Guide.\n\nAsk me
 
 const FALLBACK_ERROR = "Sorry, I couldn't connect right now. Please check your connection and try again! 🙏";
 
+// ── Storage Keys ─────────────────────────────────────────────────────────────
+
+const STORAGE_HISTORY_KEY = "kt_conv_history";
+const STORAGE_LOG_KEY     = "kt_chat_log";
+
 // ── State ────────────────────────────────────────────────────────────────────
 
 /** @type {Array<{role: "user"|"assistant", content: string}>} */
 let conversationHistory = [];
 let isLoading = false;
+
+/**
+ * chatLog stores every rendered message so we can re-draw on reload.
+ * Each entry: { type, content, time, isError } | { type:'itinerary', ...itinData }
+ * @type {Array}
+ */
+let chatLog = [];
 
 // ── DOM References ────────────────────────────────────────────────────────────
 
@@ -32,9 +44,13 @@ const chipsContainer = document.getElementById("chipsContainer");
 // ── Init ──────────────────────────────────────────────────────────────────────
 
 document.addEventListener("DOMContentLoaded", () => {
-  appendBotMessage(GREETING);
   setupEventListeners();
   setupItineraryModal();
+
+  // Restore previous session or show greeting on first load
+  const restored = loadChatFromStorage();
+  if (!restored) appendBotMessage(GREETING);
+
   userInput.focus();
 });
 
@@ -43,6 +59,10 @@ document.addEventListener("DOMContentLoaded", () => {
 function setupEventListeners() {
   // Send on button click
   sendBtn.addEventListener("click", handleSend);
+
+  // Clear chat button
+  const clearBtn = document.getElementById("clearBtn");
+  if (clearBtn) clearBtn.addEventListener("click", clearChat);
 
   // Send on Enter (Shift+Enter = newline)
   userInput.addEventListener("keydown", (e) => {
@@ -139,6 +159,7 @@ function appendUserMessage(text) {
   // Add to history
   conversationHistory.push({ role: "user", content: text });
 
+  const time = getTime();
   const row = document.createElement("div");
   row.className = "msg-row user";
   row.innerHTML = `
@@ -147,7 +168,7 @@ function appendUserMessage(text) {
 
   const ts = document.createElement("div");
   ts.className = "timestamp";
-  ts.textContent = getTime();
+  ts.textContent = time;
 
   const wrapper = document.createElement("div");
   wrapper.appendChild(row);
@@ -155,9 +176,14 @@ function appendUserMessage(text) {
 
   messagesArea.appendChild(wrapper);
   scrollToBottom();
+
+  // Persist
+  chatLog.push({ type: "user", content: text, time });
+  saveChatToStorage();
 }
 
-function appendBotMessage(text, isError = false) {
+function appendBotMessage(text, isError = false, skipLog = false) {
+  const time = getTime();
   const row = document.createElement("div");
   row.className = "msg-row bot";
   row.innerHTML = `
@@ -167,7 +193,7 @@ function appendBotMessage(text, isError = false) {
 
   const ts = document.createElement("div");
   ts.className = "timestamp";
-  ts.textContent = getTime();
+  ts.textContent = time;
 
   const wrapper = document.createElement("div");
   wrapper.appendChild(row);
@@ -175,7 +201,14 @@ function appendBotMessage(text, isError = false) {
 
   messagesArea.appendChild(wrapper);
   scrollToBottom();
+
+  // Persist unless explicitly skipped (greeting is not saved)
+  if (!skipLog) {
+    chatLog.push({ type: "bot", content: text, time, isError });
+    saveChatToStorage();
+  }
 }
+
 
 // ── Typing Indicator ──────────────────────────────────────────────────────────
 
@@ -469,6 +502,10 @@ function renderItineraryCard({ from, to, days, transport, travelers, styleList, 
 
   messagesArea.appendChild(wrapper);
   scrollToBottom();
+
+  // Persist itinerary
+  chatLog.push({ type: "itinerary", from, to, days, transport, travelers, styleList, planText, time: getTime() });
+  saveChatToStorage();
 }
 
 /**
@@ -513,4 +550,101 @@ function parsePlanText(text) {
   }
 
   return days;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// LOCALSTORAGE PERSISTENCE
+// ══════════════════════════════════════════════════════════════════════════════
+
+/** Save current conversation to localStorage. */
+function saveChatToStorage() {
+  try {
+    localStorage.setItem(STORAGE_HISTORY_KEY, JSON.stringify(conversationHistory));
+    localStorage.setItem(STORAGE_LOG_KEY, JSON.stringify(chatLog));
+  } catch (e) {
+    console.warn("localStorage save failed:", e);
+  }
+}
+
+/**
+ * Load and re-render previous session from localStorage.
+ * Returns true if anything was restored.
+ */
+function loadChatFromStorage() {
+  try {
+    const savedHistory = localStorage.getItem(STORAGE_HISTORY_KEY);
+    const savedLog = localStorage.getItem(STORAGE_LOG_KEY);
+    if (!savedLog) return false;
+
+    const log = JSON.parse(savedLog);
+    if (!log || log.length === 0) return false;
+
+    conversationHistory = JSON.parse(savedHistory) || [];
+
+    // Re-render each entry without re-saving (restore mode)
+    const snapshot = [...log];
+    chatLog = [];
+    snapshot.forEach(entry => {
+      if (entry.type === "user") {
+        _renderUserBubble(entry.content, entry.time);
+        chatLog.push(entry);
+      } else if (entry.type === "bot") {
+        _renderBotBubble(entry.content, entry.time, entry.isError);
+        chatLog.push(entry);
+      } else if (entry.type === "itinerary") {
+        // renderItineraryCard pushes to chatLog internally, so skip manual push
+        renderItineraryCard(entry);
+        // Pop the duplicate that renderItineraryCard just pushed, use original
+        chatLog.pop();
+        chatLog.push(entry);
+      }
+    });
+    scrollToBottom();
+    return true;
+  } catch (e) {
+    console.warn("localStorage load failed:", e);
+    return false;
+  }
+}
+
+/** Render a user bubble without touching state (used during restore). */
+function _renderUserBubble(text, time) {
+  const row = document.createElement("div");
+  row.className = "msg-row user";
+  row.innerHTML = `<div class="bubble user">${escapeHtml(text)}</div>`;
+  const ts = document.createElement("div");
+  ts.className = "timestamp";
+  ts.textContent = time || "";
+  const wrapper = document.createElement("div");
+  wrapper.appendChild(row);
+  wrapper.appendChild(ts);
+  messagesArea.appendChild(wrapper);
+}
+
+/** Render a bot bubble without touching state (used during restore). */
+function _renderBotBubble(text, time, isError = false) {
+  const row = document.createElement("div");
+  row.className = "msg-row bot";
+  row.innerHTML = `
+    <div class="msg-avatar">KT</div>
+    <div class="bubble bot${isError ? " error" : ""}">\${formatBotText(text)}</div>
+  `;
+  const ts = document.createElement("div");
+  ts.className = "timestamp";
+  ts.textContent = time || "";
+  const wrapper = document.createElement("div");
+  wrapper.appendChild(row);
+  wrapper.appendChild(ts);
+  messagesArea.appendChild(wrapper);
+}
+
+/** Clear all chat — DOM, state, and storage. Shows fresh greeting. */
+function clearChat() {
+  if (!confirm("Clear chat history? This cannot be undone.")) return;
+  localStorage.removeItem(STORAGE_HISTORY_KEY);
+  localStorage.removeItem(STORAGE_LOG_KEY);
+  conversationHistory = [];
+  chatLog = [];
+  messagesArea.innerHTML = "";
+  appendBotMessage(GREETING, false, true); // skipLog = true
 }

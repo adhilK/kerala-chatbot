@@ -159,6 +159,31 @@ html, body {
   backdrop-filter: blur(6px);
 }
 
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.clear-btn {
+  background: rgba(255,255,255,.12);
+  border: 1px solid rgba(255,255,255,.22);
+  color: rgba(255,255,255,.85);
+  border-radius: var(--radius-sm);
+  padding: 5px 10px;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  font-family: var(--font);
+  cursor: pointer;
+  transition: background .15s, color .15s;
+  white-space: nowrap;
+}
+
+.clear-btn:hover {
+  background: rgba(255,255,255,.25);
+  color: var(--white);
+}
+
 /* ── Messages Area ───────────────────────────────── */
 .messages-area {
   flex: 1;
@@ -417,6 +442,7 @@ html, body {
   }
   .bubble { max-width: 86%; }
   .header-badge { display: none; }
+  .clear-btn { padding: 5px 7px; font-size: 0.8rem; }
 }
 
 @media (max-width: 375px) {
