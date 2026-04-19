@@ -831,18 +831,6 @@ html, body {
   .itin-modal-header {
     border-radius: 20px 20px 0 0;
     padding: 16px 18px 14px;
-    /* drag handle indicator */
-    position: relative;
-  }
-
-  .itin-modal-header::before {
-    content: "";
-    display: block;
-    width: 36px;
-    height: 4px;
-    background: rgba(255,255,255,.4);
-    border-radius: 2px;
-    margin: 0 auto 12px;
   }
 
   .itin-icon { font-size: 1.6rem; }
@@ -858,10 +846,16 @@ html, body {
     max-height: calc(92svh - 140px); /* header + footer */
   }
 
-  /* Stack the From→To row vertically */
+  /* Stack the From→To row vertically — full width, left-aligned */
   .itin-row {
     flex-direction: column;
-    gap: 14px;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .itin-row .itin-field {
+    width: 100%;
+    flex: none;
   }
 
   .itin-arrow { display: none; }
