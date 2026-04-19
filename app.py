@@ -130,6 +130,72 @@ def chat():
         return jsonify({"reply": "Sorry, I couldn't connect right now. Please try again! 🙏"}), 500
 
 
+# ── Itinerary Planner Route ───────────────────────────────────────────────────
+
+ITINERARY_SYSTEM_PROMPT = """You are an expert Kerala travel planner. Generate detailed, practical day-by-day itineraries.
+Always use EXACTLY this format for every day — do not deviate:
+
+Day N: [Catchy Day Title]
+Morning: [2-3 specific activities with real place names, timings, entry fees if any]
+Afternoon: [2-3 specific activities with real place names, what to expect]
+Evening: [Activity + specific local food recommendation with dish/restaurant name]
+Stay: [Accommodation area with price range in INR]
+Tip: [One practical local tip - weather, transport, cultural etiquette, bargaining, etc.]
+
+Be specific. Use real Kerala place names, actual costs in INR, real distances/timings.
+Include travel logistics on Day 1 (how to get from origin to destination, duration, options).
+"""
+
+@app.route("/itinerary", methods=["POST", "OPTIONS"])
+def itinerary():
+    if request.method == "OPTIONS":
+        resp = jsonify()
+        resp.headers.add("Access-Control-Allow-Origin", "*")
+        resp.headers.add("Access-Control-Allow-Headers", "Content-Type,Authorization")
+        resp.headers.add("Access-Control-Allow-Methods", "POST,OPTIONS")
+        return resp
+
+    if not client:
+        return jsonify({
+            "error": "OPENROUTER_API_KEY not configured",
+            "plan": "Chatbot not configured. Please set OPENROUTER_API_KEY."
+        }), 500
+
+    data = request.get_json(force=True)
+    from_city   = data.get("from", "Kochi")
+    to_city     = data.get("to", "Munnar")
+    days        = min(int(data.get("days", 3)), 7)
+    style       = ", ".join(data.get("style", ["Relaxation"]))
+    transport   = data.get("transport", "Car")
+    travelers   = data.get("travelers", 2)
+
+    user_prompt = (
+        f"Plan a detailed {days}-day trip from {from_city} to {to_city} "
+        f"for {travelers} traveler(s). Travel style: {style}. "
+        f"Preferred transport: {transport}.\n\n"
+        f"Include realistic travel time from {from_city} to {to_city} on Day 1. "
+        f"Cover specific places, food, costs in INR, and local tips. "
+        f"Format strictly as Day 1, Day 2, ... with Morning / Afternoon / Evening / Stay / Tip sections."
+    )
+
+    try:
+        response = client.chat.completions.create(
+            model="meta-llama/llama-3.1-8b-instruct:free",
+            messages=[
+                {"role": "system", "content": ITINERARY_SYSTEM_PROMPT},
+                {"role": "user",   "content": user_prompt}
+            ],
+            temperature=0.7,
+            max_tokens=2000
+        )
+        plan_text = response.choices[0].message.content
+        return jsonify({"plan": plan_text})
+
+    except Exception as e:
+        print(f"Itinerary API Error: {e}")
+        return jsonify({"plan": "Sorry, couldn't generate the itinerary right now. Please try again! 🙏"}), 500
+
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(debug=True, port=port)

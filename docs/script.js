@@ -9,6 +9,9 @@
 // const API_URL = "https://kerala-chatbot-backend.vercel.app/chat";
 const API_URL = "https://kerala-chatbot-hut94w85n-adhils-projects-e3c95620.vercel.app/chat";
 
+// Itinerary endpoint — same host, different path
+const ITINERARY_URL = API_URL.replace(/\/chat$/, "/itinerary");
+
 const GREETING = "Namaskaram! 🙏 I am KT, your Kerala Tourism Guide.\n\nAsk me about Kerala's stunning places, delicious food, vibrant festivals, or travel tips. I'm here to help you plan the perfect Kerala trip!";
 
 const FALLBACK_ERROR = "Sorry, I couldn't connect right now. Please check your connection and try again! 🙏";
@@ -32,6 +35,7 @@ const chipsContainer = document.getElementById("chipsContainer");
 document.addEventListener("DOMContentLoaded", () => {
   appendBotMessage(GREETING);
   setupEventListeners();
+  setupItineraryModal();
   userInput.focus();
 });
 
@@ -55,8 +59,8 @@ function setupEventListeners() {
     updateCharCount();
   });
 
-  // Quick reply chips
-  chipsContainer.querySelectorAll(".chip").forEach((chip) => {
+  // Quick reply chips (exclude the plan chip — handled separately)
+  chipsContainer.querySelectorAll(".chip:not(.chip-plan)").forEach((chip) => {
     chip.addEventListener("click", () => {
       const msg = chip.dataset.msg;
       if (msg && !isLoading) {
@@ -263,4 +267,251 @@ function formatBotText(text) {
   // Newlines
   html = html.replace(/\n/g, "<br>");
   return html;
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ITINERARY PLANNER
+// ══════════════════════════════════════════════════════════════════════════════
+
+/** Selected transport (single) and style (multi) */
+let selectedTransport = "Car";
+let selectedStyles = new Set(["Adventure"]);
+
+function setupItineraryModal() {
+  const overlay = document.getElementById("itinOverlay");
+  const closeBtn = document.getElementById("itinCloseBtn");
+  const cancelBtn = document.getElementById("itinCancelBtn");
+  const submitBtn = document.getElementById("itinSubmitBtn");
+  const planChip = document.getElementById("chip-plan");
+
+  // Open modal
+  planChip.addEventListener("click", () => {
+    overlay.classList.add("open");
+    document.body.style.overflow = "hidden";
+  });
+
+  // Close helpers
+  function closeModal() {
+    overlay.classList.remove("open");
+    document.body.style.overflow = "";
+  }
+
+  closeBtn.addEventListener("click", closeModal);
+  cancelBtn.addEventListener("click", closeModal);
+  overlay.addEventListener("click", (e) => { if (e.target === overlay) closeModal(); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
+
+  // Transport chip — single select
+  document.querySelectorAll(".transport-chip").forEach((chip) => {
+    chip.addEventListener("click", () => {
+      document.querySelectorAll(".transport-chip").forEach(c => c.classList.remove("active"));
+      chip.classList.add("active");
+      selectedTransport = chip.dataset.val;
+    });
+  });
+
+  // Style chip — multi select (at least one always active)
+  document.querySelectorAll(".style-chip").forEach((chip) => {
+    chip.addEventListener("click", () => {
+      chip.classList.toggle("active");
+      const val = chip.dataset.val;
+      if (chip.classList.contains("active")) {
+        selectedStyles.add(val);
+      } else {
+        selectedStyles.delete(val);
+        if (selectedStyles.size === 0) {
+          chip.classList.add("active");
+          selectedStyles.add(val);
+        }
+      }
+    });
+  });
+
+  // Submit
+  submitBtn.addEventListener("click", () => handleItinerarySubmit(closeModal));
+}
+
+async function handleItinerarySubmit(closeModal) {
+  const fromCity = document.getElementById("itinFrom").value;
+  const toCity = document.getElementById("itinTo").value;
+  const days = Math.min(7, Math.max(1, parseInt(document.getElementById("itinDays").value, 10) || 3));
+  const travelers = Math.max(1, parseInt(document.getElementById("itinTravelers").value, 10) || 2);
+
+  // Validate: from ≠ to
+  if (fromCity === toCity) {
+    const toEl = document.getElementById("itinTo");
+    toEl.style.borderColor = "#e74c3c";
+    toEl.style.boxShadow = "0 0 0 3px rgba(231,76,60,.15)";
+    setTimeout(() => { toEl.style.borderColor = ""; toEl.style.boxShadow = ""; }, 2000);
+    return;
+  }
+
+  closeModal();
+
+  const styleList = [...selectedStyles].join(", ");
+  const summaryMsg = `Plan my ${days}-day trip from ${fromCity} to ${toCity} for ${travelers} traveler${travelers > 1 ? "s" : ""} — ${styleList}, by ${selectedTransport}.`;
+  appendUserMessage(summaryMsg);
+
+  setLoading(true);
+  const typingEl = showTypingIndicator();
+
+  try {
+    const res = await fetch(ITINERARY_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        from: fromCity,
+        to: toCity,
+        days: days,
+        style: [...selectedStyles],
+        transport: selectedTransport,
+        travelers: travelers
+      })
+    });
+
+    removeTypingIndicator(typingEl);
+
+    const data = await res.json();
+    const planText = data.plan || "Sorry, couldn't generate an itinerary right now. Please try again!";
+
+    renderItineraryCard({ from: fromCity, to: toCity, days, transport: selectedTransport, travelers, styleList, planText });
+
+  } catch (err) {
+    console.error("Itinerary API error:", err);
+    removeTypingIndicator(typingEl);
+    appendBotMessage("Sorry, I couldn't generate the itinerary right now. Please try again! 🙏", true);
+  } finally {
+    setLoading(false);
+  }
+}
+
+// ── Itinerary Card Renderer ───────────────────────────────────────────────────
+
+function renderItineraryCard({ from, to, days, transport, travelers, styleList, planText }) {
+  const parsedDays = parsePlanText(planText);
+
+  const card = document.createElement("div");
+  card.className = "itin-card";
+
+  // Card header
+  card.innerHTML = `
+    <div class="itin-card-header">
+      <div class="itin-card-route">🗺️ ${escapeHtml(from)} → ${escapeHtml(to)}</div>
+      <div class="itin-card-meta">
+        <span class="itin-meta-tag">📅 ${days} Day${days > 1 ? "s" : ""}</span>
+        <span class="itin-meta-tag">👥 ${travelers} Traveler${travelers > 1 ? "s" : ""}</span>
+        <span class="itin-meta-tag">${transport === "Car" ? "🚗" : transport === "Bus" ? "🚌" : transport === "Train" ? "🚂" : "✨"} ${escapeHtml(transport)}</span>
+        <span class="itin-meta-tag">🎯 ${escapeHtml(styleList)}</span>
+      </div>
+    </div>
+  `;
+
+  // Slot definitions
+  const SLOTS = [
+    { key: "Morning", cls: "morning", emoji: "🌅" },
+    { key: "Afternoon", cls: "afternoon", emoji: "☀️" },
+    { key: "Evening", cls: "evening", emoji: "🌙" },
+    { key: "Stay", cls: "stay", emoji: "🏨" },
+    { key: "Tip", cls: "tip", emoji: "💡" },
+  ];
+
+  parsedDays.forEach((day, idx) => {
+    const dayEl = document.createElement("div");
+    // Day 1 open by default
+    dayEl.className = "itin-day" + (idx === 0 ? " open" : "");
+
+    let slotsHtml = "";
+    SLOTS.forEach(({ key, cls, emoji }) => {
+      if (day[key]) {
+        slotsHtml += `
+          <div class="itin-slot ${cls}">
+            <span class="itin-slot-label">${emoji} ${key}</span>
+            <span class="itin-slot-content">${formatBotText(day[key])}</span>
+          </div>`;
+      }
+    });
+
+    if (!slotsHtml) {
+      // Fallback: show raw text
+      slotsHtml = `<div class="itin-slot"><span class="itin-slot-content">${formatBotText(day.raw || "")}</span></div>`;
+    }
+
+    dayEl.innerHTML = `
+      <div class="itin-day-header">
+        <div class="itin-day-title">
+          <span class="itin-day-badge">Day ${idx + 1}</span>
+          <span class="itin-day-name">${escapeHtml(day.title || "")}</span>
+        </div>
+        <span class="itin-day-chevron">▼</span>
+      </div>
+      <div class="itin-day-body">${slotsHtml}</div>
+    `;
+
+    dayEl.querySelector(".itin-day-header").addEventListener("click", () => {
+      dayEl.classList.toggle("open");
+    });
+
+    card.appendChild(dayEl);
+  });
+
+  // Wrap like a bot message
+  const row = document.createElement("div");
+  row.className = "msg-row bot";
+  row.innerHTML = `<div class="msg-avatar">KT</div>`;
+  row.appendChild(card);
+
+  const ts = document.createElement("div");
+  ts.className = "timestamp";
+  ts.textContent = getTime();
+
+  const wrapper = document.createElement("div");
+  wrapper.appendChild(row);
+  wrapper.appendChild(ts);
+
+  messagesArea.appendChild(wrapper);
+  scrollToBottom();
+}
+
+/**
+ * Parses LLM output into an array of day objects.
+ * Expected format: "Day N: Title\nMorning: ...\nAfternoon: ...\n..."
+ */
+function parsePlanText(text) {
+  const days = [];
+
+  // Split on "Day N:" boundaries (case-insensitive)
+  const chunks = text.split(/(?=\bDay\s+\d+\s*:)/i).filter(s => s.trim());
+
+  chunks.forEach(chunk => {
+    const titleMatch = chunk.match(/^Day\s+\d+\s*:\s*(.+)/i);
+    const title = titleMatch ? titleMatch[1].split("\n")[0].trim() : "";
+
+    const extract = (label) => {
+      const re = new RegExp(
+        `\\b${label}\\s*:\\s*([\\s\\S]*?)(?=\\n\\s*(?:Morning|Afternoon|Evening|Stay|Tip)\\s*:|$)`,
+        "i"
+      );
+      const m = chunk.match(re);
+      return m ? m[1].trim() : "";
+    };
+
+    const obj = {
+      title,
+      Morning: extract("Morning"),
+      Afternoon: extract("Afternoon"),
+      Evening: extract("Evening"),
+      Stay: extract("Stay"),
+      Tip: extract("Tip"),
+      raw: chunk
+    };
+
+    days.push(obj);
+  });
+
+  // If parsing totally failed, show everything as one block
+  if (days.length === 0) {
+    days.push({ title: "Your Itinerary", Morning: text, Afternoon: "", Evening: "", Stay: "", Tip: "", raw: text });
+  }
+
+  return days;
 }

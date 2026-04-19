@@ -47,6 +47,7 @@
         <button class="chip" id="chip-festivals" data-msg="Festivals">🎉 Festivals</button>
         <button class="chip" id="chip-tips"      data-msg="Travel Tips">✈️ Travel Tips</button>
         <button class="chip" id="chip-backwaters"data-msg="Backwaters">🚤 Backwaters</button>
+        <button class="chip chip-plan" id="chip-plan">🗓️ Plan My Trip</button>
       </div>
 
       <!-- ── Input Bar ── -->
@@ -74,5 +75,103 @@
   </div><!-- /app-shell -->
 
   <script src="script.js"></script>
+
+  <!-- ── Itinerary Planner Modal ── -->
+  <div class="itin-overlay" id="itinOverlay" role="dialog" aria-modal="true" aria-label="Trip Planner">
+    <div class="itin-modal">
+
+      <div class="itin-modal-header">
+        <div class="itin-modal-title">
+          <span class="itin-icon">🗓️</span>
+          <div>
+            <h2>Plan My Kerala Trip</h2>
+            <p>Fill in your details and KT will craft a personalised itinerary</p>
+          </div>
+        </div>
+        <button class="itin-close-btn" id="itinCloseBtn" aria-label="Close planner">✕</button>
+      </div>
+
+      <div class="itin-modal-body">
+
+        <!-- Row 1: From → To -->
+        <div class="itin-row">
+          <div class="itin-field">
+            <label for="itinFrom">🏙️ Starting City</label>
+            <select id="itinFrom">
+              <option value="Kochi">Kochi</option>
+              <option value="Thiruvananthapuram">Thiruvananthapuram</option>
+              <option value="Kozhikode">Kozhikode</option>
+              <option value="Thrissur">Thrissur</option>
+              <option value="Kannur">Kannur</option>
+              <option value="Kollam">Kollam</option>
+              <option value="Palakkad">Palakkad</option>
+            </select>
+          </div>
+          <div class="itin-arrow">→</div>
+          <div class="itin-field">
+            <label for="itinTo">📍 Destination</label>
+            <select id="itinTo">
+              <option value="Munnar">Munnar</option>
+              <option value="Alleppey">Alleppey (Backwaters)</option>
+              <option value="Wayanad">Wayanad</option>
+              <option value="Thekkady">Thekkady (Periyar)</option>
+              <option value="Varkala">Varkala</option>
+              <option value="Kovalam">Kovalam</option>
+              <option value="Fort Kochi">Fort Kochi</option>
+              <option value="Thrissur">Thrissur</option>
+              <option value="Kannur">Kannur</option>
+              <option value="Kozhikode">Kozhikode</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Row 2: Days + Travelers -->
+        <div class="itin-row">
+          <div class="itin-field">
+            <label for="itinDays">📅 Number of Days</label>
+            <input type="number" id="itinDays" min="1" max="7" value="3" />
+          </div>
+          <div class="itin-field">
+            <label for="itinTravelers">👥 Travelers</label>
+            <input type="number" id="itinTravelers" min="1" max="20" value="2" />
+          </div>
+        </div>
+
+        <!-- Row 3: Transport -->
+        <div class="itin-field">
+          <label>🚗 Mode of Transport</label>
+          <div class="itin-transport-chips">
+            <button type="button" class="transport-chip active" data-val="Car">🚗 Car</button>
+            <button type="button" class="transport-chip" data-val="Bus">🚌 Bus</button>
+            <button type="button" class="transport-chip" data-val="Train">🚂 Train</button>
+            <button type="button" class="transport-chip" data-val="Any">✨ Any</button>
+          </div>
+        </div>
+
+        <!-- Row 4: Travel Style -->
+        <div class="itin-field">
+          <label>🎯 Travel Style <span class="itin-hint">(pick any)</span></label>
+          <div class="itin-style-chips">
+            <button type="button" class="style-chip active" data-val="Adventure">🏔️ Adventure</button>
+            <button type="button" class="style-chip" data-val="Relaxation">🧘 Relaxation</button>
+            <button type="button" class="style-chip" data-val="Culture">🎭 Culture</button>
+            <button type="button" class="style-chip" data-val="Food">🍛 Food</button>
+            <button type="button" class="style-chip" data-val="Nature">🌿 Nature</button>
+            <button type="button" class="style-chip" data-val="Family">👨‍👩‍👧 Family</button>
+          </div>
+        </div>
+
+      </div><!-- /modal-body -->
+
+      <div class="itin-modal-footer">
+        <button class="itin-cancel-btn" id="itinCancelBtn">Cancel</button>
+        <button class="itin-submit-btn" id="itinSubmitBtn">
+          <span id="itinSubmitLabel">✨ Generate Itinerary</span>
+        </button>
+      </div>
+
+    </div>
+  </div><!-- /itin-overlay -->
+
 </body>
 </html>
