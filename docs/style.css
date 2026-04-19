@@ -816,10 +816,98 @@ html, body {
 
 /* ── Responsive ── */
 @media (max-width: 520px) {
-  .itin-modal { max-height: 100svh; border-radius: 0; }
-  .itin-overlay { padding: 0; align-items: flex-end; }
-  .itin-modal-header { border-radius: 0; }
-  .itin-row { flex-direction: column; }
+  /* Slide up as a bottom sheet */
+  .itin-overlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .itin-modal {
+    border-radius: 20px 20px 0 0;
+    max-height: 92svh;
+    width: 100%;
+  }
+
+  .itin-modal-header {
+    border-radius: 20px 20px 0 0;
+    padding: 16px 18px 14px;
+    /* drag handle indicator */
+    position: relative;
+  }
+
+  .itin-modal-header::before {
+    content: "";
+    display: block;
+    width: 36px;
+    height: 4px;
+    background: rgba(255,255,255,.4);
+    border-radius: 2px;
+    margin: 0 auto 12px;
+  }
+
+  .itin-icon { font-size: 1.6rem; }
+
+  .itin-modal-title h2 { font-size: 0.95rem; }
+  .itin-modal-title p  { font-size: 0.72rem; }
+
+  /* Scrollable form body */
+  .itin-modal-body {
+    padding: 16px 16px;
+    gap: 14px;
+    overflow-y: auto;
+    max-height: calc(92svh - 140px); /* header + footer */
+  }
+
+  /* Stack the From→To row vertically */
+  .itin-row {
+    flex-direction: column;
+    gap: 14px;
+  }
+
   .itin-arrow { display: none; }
+
+  /* Bigger tap targets for inputs */
+  .itin-field select,
+  .itin-field input[type="number"] {
+    padding: 11px 14px;
+    font-size: 1rem;       /* prevents iOS zoom on focus */
+    min-height: 46px;
+  }
+
+  .itin-field select {
+    padding-right: 32px;
+  }
+
+  .itin-field label {
+    font-size: 0.82rem;
+  }
+
+  /* Transport + style chips — wrap nicely, bigger tap */
+  .transport-chip,
+  .style-chip {
+    padding: 9px 16px;
+    font-size: 0.85rem;
+  }
+
+  /* Footer — full width buttons */
+  .itin-modal-footer {
+    padding: 12px 16px 24px; /* 24px bottom for home bar */
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+
+  .itin-submit-btn,
+  .itin-cancel-btn {
+    width: 100%;
+    text-align: center;
+    padding: 13px;
+    font-size: 0.95rem;
+  }
 }
 
+/* Very small phones (≤375px) */
+@media (max-width: 375px) {
+  .itin-modal-body { padding: 14px 14px; gap: 12px; }
+  .transport-chip,
+  .style-chip { padding: 8px 12px; font-size: 0.78rem; }
+}
