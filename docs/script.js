@@ -5,8 +5,8 @@
 
 // ── Config ──────────────────────────────────────────────────────────────────
 
-// Production backend — update this after each Vercel redeploy
-const API_URL = "https://kerala-chatbot-83i8cn2t8-adhils-projects-e3c95620.vercel.app/chat";
+// Production backend — google/gemini-2.0-flash-001 (paid, no rate limits)
+const API_URL = "https://kerala-chatbot-1keflecfb-adhils-projects-e3c95620.vercel.app/chat";
 
 // Itinerary endpoint — same host, different path
 const ITINERARY_URL = API_URL.replace(/\/chat$/, "/itinerary");

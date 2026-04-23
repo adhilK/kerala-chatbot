@@ -94,7 +94,7 @@ def chat():
 
         # Call OpenRouter API (using a free tier model)
         response = client.chat.completions.create(
-            model="arcee-ai/trinity-large-preview:free",
+            model="google/gemini-2.0-flash-001",
             messages=messages,
             temperature=0.7,
             max_tokens=500
@@ -161,7 +161,7 @@ def itinerary():
 
     try:
         response = client.chat.completions.create(
-            model="arcee-ai/trinity-large-preview:free",
+            model="google/gemini-2.0-flash-001",
             messages=[
                 {"role": "system", "content": ITINERARY_SYSTEM_PROMPT},
                 {"role": "user",   "content": user_prompt}
