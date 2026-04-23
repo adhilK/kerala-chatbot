@@ -135,6 +135,7 @@ def chat():
 # ── Itinerary Planner Route ───────────────────────────────────────────────────
 
 ITINERARY_SYSTEM_PROMPT = """You are an expert Kerala travel planner. Generate detailed, practical day-by-day itineraries.
+IMPORTANT: Start your response DIRECTLY with "Day 1:" — no introduction, no preamble, no summary sentence before Day 1.
 Always use EXACTLY this format for every day — do not deviate:
 
 Day N: [Catchy Day Title]

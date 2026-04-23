@@ -6,7 +6,7 @@
 // ── Config ──────────────────────────────────────────────────────────────────
 
 // Production backend — google/gemini-2.0-flash-001 (paid, no rate limits)
-const API_URL = "https://kerala-chatbot-1keflecfb-adhils-projects-e3c95620.vercel.app/chat";
+const API_URL = "https://kerala-chatbot-cqioamzl9-adhils-projects-e3c95620.vercel.app/chat";
 
 // Itinerary endpoint — same host, different path
 const ITINERARY_URL = API_URL.replace(/\/chat$/, "/itinerary");
@@ -515,10 +515,17 @@ function renderItineraryCard({ from, to, days, transport, travelers, styleList, 
 function parsePlanText(text) {
   const days = [];
 
+  // Strip any preamble/intro before the first "Day N:" line
+  const firstDayIdx = text.search(/\bDay\s+\d+\s*:/i);
+  const cleanText = firstDayIdx > 0 ? text.slice(firstDayIdx) : text;
+
   // Split on "Day N:" boundaries (case-insensitive)
-  const chunks = text.split(/(?=\bDay\s+\d+\s*:)/i).filter(s => s.trim());
+  const chunks = cleanText.split(/(?=\bDay\s+\d+\s*:)/i).filter(s => s.trim());
 
   chunks.forEach(chunk => {
+    // Skip any chunk that doesn't actually start with "Day N:" (stray preamble)
+    if (!/^Day\s+\d+\s*:/i.test(chunk.trim())) return;
+
     const titleMatch = chunk.match(/^Day\s+\d+\s*:\s*(.+)/i);
     const title = titleMatch ? titleMatch[1].split("\n")[0].trim() : "";
 
