@@ -123,6 +123,8 @@ def chat():
             max_tokens=500
         )
         reply_text = response.choices[0].message.content
+        if not reply_text:
+            reply_text = "I'm sorry, I couldn't generate a response. Please try again! 🙏"
         return jsonify({"reply": reply_text})
 
     except Exception as e:
@@ -189,6 +191,8 @@ def itinerary():
             max_tokens=2000
         )
         plan_text = response.choices[0].message.content
+        if not plan_text:
+            return jsonify({"plan": "Sorry, couldn't generate the itinerary right now. Please try again! 🙏"}), 500
         return jsonify({"plan": plan_text})
 
     except Exception as e:
